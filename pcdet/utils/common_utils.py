@@ -293,3 +293,30 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+
+def get(dt, f1, f2):
+    if f1 in dt:
+        return dt[f1]
+    elif f2 in dt:
+        return dt[f2]
+    else:
+        return 0
+
+
+def extract_label(gt_label):
+    return [gt_label['center']['x'], gt_label['center']['y'], gt_label['center']['z'], get(gt_label['size'], 'x', 'l'), get(gt_label['size'], 'y', 'w'), get(gt_label['size'], 'z', 'h'), gt_label['rotation']['yaw']]
+
+
+def format_label(label):
+    scores = []
+    gt_names = []
+    gt_boxes = []
+    for lb in label:
+        gt_boxes.append(extract_label(lb))
+        gt_names.append(lb['type'])
+        scores.append(1.0)
+    return {'score': np.array(scores),
+            'gt_names': np.array(gt_names),
+            'gt_boxes_lidar': np.array(gt_boxes)
+    }
