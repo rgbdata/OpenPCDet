@@ -52,6 +52,36 @@ def boxes_to_corners_3d(boxes3d):
 
     return corners3d.numpy() if is_numpy else corners3d
 
+
+def boxes_to_corners_3d_lidar(boxes3d):
+    """
+        7 -------- 4
+       /|         /|
+      6 -------- 5 .
+      | |        | |
+      . 3 -------- 0
+      |/         |/
+      2 -------- 1
+    Args:
+        boxes3d:  (N, 7) [x, y, z, dx, dy, dz, heading], (x, y, z) is the box center
+
+    Returns:
+    """
+    boxes3d, is_numpy = common_utils.check_numpy_to_torch(boxes3d)
+    # ck: new_tensor : Returns a new Tensor with data as the tensor data. By default, the returned Tensor has the same
+    # ck: torch.dtype and torch.device as this tensor.
+    template = boxes3d.new_tensor((
+        [1, -1, -1], [-1, -1, -1], [-1, 1, -1], [1, 1, -1],
+        [1, -1, 1], [-1, -1, 1], [-1, 1, 1], [1, 1, 1],
+    )) / 2
+
+    corners3d = boxes3d[:, None, 3:6].repeat(1, 8, 1) * template[None, :, :]
+    corners3d = common_utils.rotate_points_along_z(corners3d.view(-1, 8, 3), boxes3d[:, 6]).view(-1, 8, 3)
+    corners3d += boxes3d[:, None, 0:3]
+
+    return corners3d.numpy() if is_numpy else corners3d
+
+
 def corners_rect_to_camera(corners):
     """
         7 -------- 4
